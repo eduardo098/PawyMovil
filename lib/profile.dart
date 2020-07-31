@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'login.dart';
 import 'utils/utils.dart';
 import 'models/profile.dart';
+import 'models/orderitem.dart';
 
 class Profile extends StatefulWidget {
   @override
@@ -13,11 +14,13 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
   Future<Perfil> _profile;
+  Future<List> _orderItems;
   List content;
   @override
   void initState() {
     super.initState();
     _profile = fetchProfileData();
+    _orderItems = fetchOrderItems();
   }
   @override
   Widget build(BuildContext context) {
@@ -25,6 +28,7 @@ class _ProfileState extends State<Profile> {
       future: _profile,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
+          print(snapshot.data);
           return Container(
             child: Column(
               children: <Widget>[
@@ -112,58 +116,65 @@ class _ProfileState extends State<Profile> {
   }
 
   Widget orderItem() {
-    return Container(
-      height: 160,
-      width: MediaQuery.of(context).size.width - 50,
-      child: Card(
-        child: Column(
-          children: <Widget>[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: EdgeInsets.only(top: 10, left: 15),
-                child: Text("ID de Orden: #4245353", style: TextStyle(fontWeight: FontWeight.w700),)
-              )
+    return FutureBuilder<List>(
+      future: _orderItems,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Container(
+            height: 160,
+            width: MediaQuery.of(context).size.width - 50,
+            child: Card(
+              child: Column(
+                children: <Widget>[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 10, left: 15),
+                      child: Text("ID de Orden: " + snapshot.data.last.idOrden, style: TextStyle(fontWeight: FontWeight.w700),)
+                    )
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Container(
+                        padding: EdgeInsets.only(left: 15, top: 10),
+                        height: 100,
+                        width: 130,
+                        child: Image.network(
+                        "https://www.tourinews.es/uploads/s1/16/86/25/paisaje-2.jpeg",
+                        fit: BoxFit.cover,
+                        )
+                      ),
+                      Column(
+                        children: <Widget>[
+                          Align(
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 10, left: 20, right: 15),
+                              child: Text(snapshot.data.last.nombreProducto, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))
+                            )
+                          ),
+                          Align(
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 10),
+                              child: Text("\$" + snapshot.data.last.nombreProducto, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))
+                            )
+                          ),
+                        ],
+                      ),
+                      Align(
+                        child: Padding(
+                            padding: EdgeInsets.only(top: 10, left: 20),
+                            child: Text("Cantidad: 3", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700))
+                        )
+                      ),
+                    ],
+                  )
+                ],
+              ),
             ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Container(
-                  padding: EdgeInsets.only(left: 15, top: 10),
-                  height: 100,
-                  width: 130,
-                  child: Image.network(
-                  "https://www.tourinews.es/uploads/s1/16/86/25/paisaje-2.jpeg",
-                  fit: BoxFit.cover,
-                  )
-                ),
-                Column(
-                  children: <Widget>[
-                    Align(
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 10, left: 20),
-                        child: Text("Producto X", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))
-                      )
-                    ),
-                    Align(
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 10),
-                        child: Text("\$99,99", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))
-                      )
-                    ),
-                  ],
-                ),
-                Align(
-                  child: Padding(
-                      padding: EdgeInsets.only(top: 10, left: 20),
-                      child: Text("Cantidad: 3", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700))
-                  )
-                ),
-              ],
-            )
-          ],
-        ),
-      ),
+          );
+        }
+      },
     );
   }
 }

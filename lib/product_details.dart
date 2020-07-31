@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'models/product.dart';
+import 'localDB/db_helper.dart';
+import 'package:sqflite/sqflite.dart';
 
 class ProductDetails extends StatefulWidget {
-  String nombre;
-  String precio;
-  String descripcion;
+  Producto producto;
 
-  ProductDetails({this.nombre, this.precio, this.descripcion});
+  ProductDetails({this.producto});
 
   @override
   _ProductDetailsState createState() => _ProductDetailsState();
@@ -14,7 +14,11 @@ class ProductDetails extends StatefulWidget {
 
 class _ProductDetailsState extends State<ProductDetails> {
   int productQuantity = 1;
-
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,7 +70,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                           alignment: Alignment.topLeft,
                           child: Padding(
                             padding: EdgeInsets.only(top: 40, left: 20),
-                            child: Text(widget.nombre, style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700, color: Colors.greenAccent,))
+                            child: Text(widget.producto.nombreProducto, style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700, color: Colors.greenAccent,))
                           )
                         ),
                         Row(
@@ -78,7 +82,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                             ),
                             Padding(
                               padding: EdgeInsets.only(top: 20, right: 40),
-                              child: Text("\$" + widget.precio + " MXN", style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700, color: Colors.greenAccent,),)
+                              child: Text("\$" + widget.producto.precio + " MXN", style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700, color: Colors.greenAccent,),)
                             )
                           ],
                         ),
@@ -92,7 +96,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                         Padding(
                           padding: EdgeInsets.all(20.0),
                           child: Text(
-                            widget.descripcion,
+                            widget.producto.descProducto,
                             style: TextStyle(
                               fontSize: 16,
                               height: 1.5,
@@ -108,7 +112,10 @@ class _ProductDetailsState extends State<ProductDetails> {
                             child: RaisedButton.icon(
                               color: Colors.greenAccent,
                               icon: Icon(Icons.add_shopping_cart),  
-                              onPressed: () {},
+                              onPressed: () async {
+                                _insertProduct(widget.producto);
+                                _query();
+                              },
                               label: Text("Agregar al carrito"),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
@@ -127,12 +134,25 @@ class _ProductDetailsState extends State<ProductDetails> {
     );
   }
 
+  void _insertProduct(Producto producto) async {
+    var res = await DatabaseHelper.db.insertItem(producto, productQuantity);
+    print(res);
+  } 
+
+  void _query() async {
+    var res = await DatabaseHelper.db.getAllProducts();
+    print(res);
+    for (int i = 0; i < res.length; i++) {
+      print("Producto ${i}:: " + res[i].idProducto + " | " + res[i].nombreProducto + " | " + res[i].precio + " | " + res[i].cantidad);
+    }
+  }
+
   Widget productCounter() {
     return Row(
       children: <Widget>[
         SizedBox(
           height: 40,
-          width: 40,
+          width: 40, 
           child: RaisedButton(
             color: Colors.white,
             onPressed: () {

@@ -78,23 +78,6 @@ class _ProductsState extends State<Products> {
                 }
               }
             ),
-            /*GridView.count(
-              mainAxisSpacing: 8.0,
-              crossAxisSpacing: 4.0,
-              shrinkWrap: true,
-              crossAxisCount: 2,
-              physics: ScrollPhysics(),
-              children: <Widget>[
-                featuredProductCard(context),
-                featuredProductCard(context),
-                featuredProductCard(context),
-                featuredProductCard(context),
-                featuredProductCard(context),
-                featuredProductCard(context),
-                featuredProductCard(context),
-                featuredProductCard(context)
-              ],
-            )*/
           ], 
         ),
       )
@@ -106,9 +89,7 @@ class _ProductsState extends State<Products> {
       onTap: () {
         Navigator.of(context).
         push(MaterialPageRoute(builder: (context) => ProductDetails(
-          nombre: product.nombreProducto,
-          descripcion: product.descProducto,
-          precio: product.precio
+          producto: product,
         )));
       },
       child: Container(

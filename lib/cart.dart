@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:pawyapp/utils/utils.dart';
 import 'product_details.dart';
+import 'models/product.dart';
+import 'localDB/db_helper.dart';
+import 'dart:convert';
 
 class Cart extends StatefulWidget {
   @override
@@ -8,6 +12,8 @@ class Cart extends StatefulWidget {
 
 class _CartState extends State<Cart> {
   int productQuantity = 1;
+  List products;
+  Map<String, dynamic> orderItems;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,14 +27,38 @@ class _CartState extends State<Cart> {
               child: Text("Mi Carrito", style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700, color: Colors.greenAccent)),
             )
           ),
-          ListView(
-            physics: ScrollPhysics(),
-            shrinkWrap: true,
-            children: <Widget>[
-              shoppingCartItem(),
-              shoppingCartItem(),
-              shoppingCartItem(),
-            ],
+          FutureBuilder(
+            future: DatabaseHelper.db.getAllProducts(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                //List for database;
+                products = snapshot.data;
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: ScrollPhysics(),
+                  itemCount: snapshot.data.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    Producto producto = snapshot.data[index];
+                    return Dismissible(
+                      direction: DismissDirection.endToStart,
+                      key: UniqueKey(),
+                      background: Container(
+                        alignment: AlignmentDirectional.centerEnd,
+                        color: Colors.redAccent,
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(0.0, 0.0, 10.0, 0.0),
+                          child: Icon(Icons.delete_sweep, color: Colors.white, size: 30,)
+                        )
+                      ),
+                      onDismissed: (direction){
+                        DatabaseHelper.db.deleteProduct(int.parse(producto.idLocal));
+                      },
+                      child: shoppingCartItem(producto)
+                    );
+                  }
+                );
+              }
+            }
           ),
           Padding(
             padding: EdgeInsets.all(20),
@@ -59,7 +89,21 @@ class _CartState extends State<Cart> {
                 width: 200,
                 child: RaisedButton.icon( 
                   color: Colors.greenAccent,
-                  onPressed: () {},
+                  onPressed: () {
+                    List items = [];
+                    for(int i = 0; i < products.length; i++) {
+                      //var producto = new Producto(cantidad: products[i].cantidad, idProducto: products[i].idProducto);
+                      //items.add(producto);
+                      var itemsMap = {
+                        "cantidad": products[i].cantidad,
+                        "idProducto": products[i].idProducto
+                      };
+
+                      items.add(itemsMap);
+                    }
+                    //print("JSON DATA::: " + jsonEncode(items));
+                    placeOrder(items);
+                  },
                   icon: Icon(Icons.check_circle),
                   label: Text("Ordenar", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                   shape: RoundedRectangleBorder(
@@ -74,11 +118,11 @@ class _CartState extends State<Cart> {
     );
   }
 
-  Widget shoppingCartItem() {
+  Widget shoppingCartItem(Producto producto) {
     return Container(
       height: 120,
       padding: EdgeInsets.only(top: 5, bottom: 5),
-      width: MediaQuery.of(context).size.width - 40,
+      width: MediaQuery.of(context).size.width,
       child: Card(
         elevation: 5,
         child: Row(
@@ -98,14 +142,14 @@ class _CartState extends State<Cart> {
                   alignment: Alignment.topLeft,
                   child: Padding(
                     padding: EdgeInsets.only(top: 20, left: 20),
-                    child: Text("Producto X", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700))
+                    child: Text(producto.nombreProducto, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700))
                   )
                 ),
                 Align(
                   alignment: Alignment.topLeft,
                   child: Padding(
                     padding: EdgeInsets.only(top: 10, left: 20),
-                    child: Text("\$99,99", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))
+                    child: Text("\$" + producto.precio, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))
                   )
                 )
               ],
@@ -114,7 +158,7 @@ class _CartState extends State<Cart> {
               padding: EdgeInsets.only(left: 20),
               child: Transform.scale(
                 scale: 0.7,
-                child: productCounter(),
+                child: ProductCounter(quantity: int.parse(producto.cantidad)),
               )
             ) 
           ]
@@ -122,8 +166,21 @@ class _CartState extends State<Cart> {
       )
     );
   }
+}
 
-  Widget productCounter() {
+class ProductCounter extends StatefulWidget {
+  int quantity;
+  ProductCounter({this.quantity});
+  @override
+  _ProductCounterState createState() => _ProductCounterState();
+}
+
+class _ProductCounterState extends State<ProductCounter>{
+  @override
+  Widget build(BuildContext context) {
+
+    int productQuantity = widget.quantity;
+
     return Row(
       children: <Widget>[
         SizedBox(
@@ -178,5 +235,5 @@ class _CartState extends State<Cart> {
         ),
       ],
     );
-  }
+  } 
 }

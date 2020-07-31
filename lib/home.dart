@@ -87,9 +87,7 @@ class _HomeState extends State<Home> {
       onTap: () {
         Navigator.of(context)
         .push(MaterialPageRoute(builder: (context) => ProductDetails(
-          nombre: producto.nombreProducto,
-          descripcion: producto.descProducto,
-          precio: producto.precio
+          producto: producto,
         )));
       },
       child: Container(

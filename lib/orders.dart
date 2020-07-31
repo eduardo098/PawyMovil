@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'utils/utils.dart';
+import 'models/orderitem.dart';
 
 class Orders extends StatefulWidget {
   @override
@@ -6,6 +8,14 @@ class Orders extends StatefulWidget {
 }
 
 class _OrdersState extends State<Orders> {
+  Future<List> _orderItems;
+  List content;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _orderItems = fetchOrderItems();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,24 +52,27 @@ class _OrdersState extends State<Orders> {
               ],
             )
           ),
-          ListView(
-            physics: ScrollPhysics(),
-            shrinkWrap: true,
-            children: <Widget>[
-              orderItem(),
-              orderItem(),
-              orderItem(),
-              orderItem(),
-              orderItem(),
-              orderItem(),
-            ],
+          FutureBuilder(
+            future: _orderItems,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                content = snapshot.data;
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: content.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return orderItem(content[index]);
+                  }
+                );
+              }
+            }
           )
         ],
       )
     );
   }
 
-  Widget orderItem() {
+  Widget orderItem(ItemOrden item) {
     return Container(
       height: 140,
       width: MediaQuery.of(context).size.width - 60,
@@ -70,7 +83,7 @@ class _OrdersState extends State<Orders> {
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: EdgeInsets.only(top: 10, left: 15),
-                child: Text("ID de Orden: #4245353", style: TextStyle(fontWeight: FontWeight.w700),)
+                child: Text("ID de Orden: " + item.idOrden, style: TextStyle(fontWeight: FontWeight.w700),)
               )
             ),
             Row(
@@ -90,12 +103,12 @@ class _OrdersState extends State<Orders> {
                     Align(
                       child: Padding(
                         padding: EdgeInsets.only(top: 10, left: 20),
-                        child: Text("Producto X", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))
+                        child: Text(item.nombreProducto, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))
                       )
                     ),
                     Align(
                       child: Padding(
-                        padding: EdgeInsets.only(top: 10),
+                        padding: EdgeInsets.only(top: 10, left: 20),
                         child: Text("\$99,99", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))
                       )
                     ),
