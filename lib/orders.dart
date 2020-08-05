@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'utils/utils.dart';
 import 'models/orderitem.dart';
+import 'package:grouped_listview/grouped_listview.dart';
 
 class Orders extends StatefulWidget {
   @override
@@ -8,8 +9,8 @@ class Orders extends StatefulWidget {
 }
 
 class _OrdersState extends State<Orders> {
-  Future<List> _orderItems;
-  List content;
+  Future<List<ItemOrden>> _orderItems;
+  List<ItemOrden> groupedContent;
   @override
   void initState() {
     // TODO: implement initState
@@ -20,6 +21,7 @@ class _OrdersState extends State<Orders> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListView(
+        shrinkWrap: true,
         children: <Widget>[
           Padding(
             padding: EdgeInsets.all(20),
@@ -52,20 +54,32 @@ class _OrdersState extends State<Orders> {
               ],
             )
           ),
-          FutureBuilder(
+          //Text("CONTENIDO AGRUPADO"),
+          Container(
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.width,
+            child: FutureBuilder(
             future: _orderItems,
             builder: (context, snapshot) {
+              print(snapshot.data.length);
               if (snapshot.hasData) {
-                content = snapshot.data;
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: content.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return orderItem(content[index]);
-                  }
+                groupedContent = snapshot.data;
+                return GroupedListView(
+                  collection: groupedContent,
+                  groupBy: (ItemOrden item) => item.idOrden,
+                  listBuilder: (BuildContext context, ItemOrden item) => orderItem(item),
+                  groupBuilder: (BuildContext context, String name) {
+                    return Padding(
+                      padding: EdgeInsets.only(top: 20, left: 20),
+                      child: Text(name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),)
+                    );
+                  } 
                 );
+              } else {
+                return Text("Hay un error en el future");
               }
             }
+          ),
           )
         ],
       )
@@ -74,18 +88,11 @@ class _OrdersState extends State<Orders> {
 
   Widget orderItem(ItemOrden item) {
     return Container(
-      height: 140,
+      height: 110,
       width: MediaQuery.of(context).size.width - 60,
       child: Card(
         child: Column(
           children: <Widget>[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: EdgeInsets.only(top: 10, left: 15),
-                child: Text("ID de Orden: " + item.idOrden, style: TextStyle(fontWeight: FontWeight.w700),)
-              )
-            ),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -114,10 +121,11 @@ class _OrdersState extends State<Orders> {
                     ),
                   ],
                 ),
+                Spacer(),
                 Align(
                   child: Padding(
-                      padding: EdgeInsets.only(top: 10, left: 20),
-                      child: Text("Cantidad: 3", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700))
+                      padding: EdgeInsets.only(top: 10, left: 20, right: 30),
+                      child: Text("Cantidad: 3", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))
                   )
                 ),
               ],

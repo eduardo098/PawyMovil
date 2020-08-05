@@ -75,7 +75,7 @@ Future<Perfil> fetchProfileData() async {
   });
 }
 
-Future<List> fetchOrderItems() async {
+Future<List<ItemOrden>> fetchOrderItems() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   var token = prefs.get("token");
   return http.post("http://192.168.1.75/WSPawy/ws_fetch_profile_data.php", 
@@ -87,7 +87,8 @@ Future<List> fetchOrderItems() async {
       throw new Exception("Error while fetching data");
     } else {
       final items = json.decode(response.body).cast<Map<String, dynamic>>();
-      return items.map((data) => ItemOrden.fromJson(data)).toList();
+      List<ItemOrden> list = List<ItemOrden>.from(items.map((data) => ItemOrden.fromJson(data)));
+      return list;
     }
   });
 }

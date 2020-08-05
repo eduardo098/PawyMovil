@@ -121,7 +121,7 @@ class _CartState extends State<Cart> {
   Widget shoppingCartItem(Producto producto) {
     return Container(
       height: 120,
-      padding: EdgeInsets.only(top: 5, bottom: 5),
+      //padding: EdgeInsets.only(top: 5, bottom: 5),
       width: MediaQuery.of(context).size.width,
       child: Card(
         elevation: 5,
@@ -154,11 +154,15 @@ class _CartState extends State<Cart> {
                 )
               ],
             ),
-            Padding(
-              padding: EdgeInsets.only(left: 20),
-              child: Transform.scale(
-                scale: 0.7,
-                child: ProductCounter(quantity: int.parse(producto.cantidad)),
+            Spacer(),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: EdgeInsets.only(left: 20),
+                child: Transform.scale(
+                  scale: 0.7,
+                  child: ProductCounter(quantity: int.parse(producto.cantidad)),
+                )
               )
             ) 
           ]

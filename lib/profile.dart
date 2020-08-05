@@ -61,7 +61,7 @@ class _ProfileState extends State<Profile> {
                             child: Text("Mis Ordenes", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),)
                           )
                         ),
-                        orderItem(),
+                        //orderItem(),
                         Padding(
                           padding: EdgeInsets.only(top: 30),
                           child: SizedBox(
