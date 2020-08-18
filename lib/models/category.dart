@@ -1,12 +1,14 @@
 class Categoria {
   String idCategoria;
   String nombre;
+  String imgURL;
 
-  Categoria({this.idCategoria, this.nombre});
+  Categoria({this.idCategoria, this.nombre, this.imgURL});
 
   Categoria.fromJson(Map<String, dynamic> json) {
     idCategoria = json['id_categoria'];
     nombre = json['nombre'];
+    imgURL = json['imagen'];
   }
 
   Map<String, dynamic> toJson() {

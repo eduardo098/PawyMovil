@@ -14,6 +14,7 @@ class ProductDetails extends StatefulWidget {
 
 class _ProductDetailsState extends State<ProductDetails> {
   int productQuantity = 1;
+  String serverUrl = "http://192.168.1.67";
   @override
   void initState() {
     // TODO: implement initState
@@ -31,7 +32,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                 height: 350,
                 width: MediaQuery.of(context).size.width,
                 child: Image.network(
-                  "https://www.tourinews.es/uploads/s1/16/86/25/paisaje-2.jpeg",
+                  serverUrl + widget.producto.imgUrl,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -77,7 +78,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Padding(
-                              padding: EdgeInsets.only(top: 20, left: 40),
+                              padding: EdgeInsets.only(top: 20, left: 20),
                               child: productCounter(),
                             ),
                             Padding(
@@ -86,10 +87,46 @@ class _ProductDetailsState extends State<ProductDetails> {
                             )
                           ],
                         ),
+                        Row(
+                          children: <Widget>[
+                            Align(
+                              alignment: Alignment.topLeft,
+                              child: Padding(
+                                padding: EdgeInsets.only(top: 20, left: 20),
+                                child: Text("Categoría:", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.greenAccent,))
+                              )
+                            ),
+                            Align(
+                              alignment: Alignment.topLeft,
+                              child: Padding(
+                                padding: EdgeInsets.only(top: 20, left: 10),
+                                child: Text(widget.producto.categoria, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700,))
+                              )
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: <Widget>[
+                            Align(
+                              alignment: Alignment.topLeft,
+                              child: Padding(
+                                padding: EdgeInsets.only(top: 20, left: 20),
+                                child: Text("Stock:", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.greenAccent,))
+                              )
+                            ),
+                            Align(
+                              alignment: Alignment.topLeft,
+                              child: Padding(
+                                padding: EdgeInsets.only(top: 20, left: 10),
+                                child: Text(widget.producto.stock, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700,))
+                              )
+                            ),
+                          ],
+                        ),
                         Align(
                           alignment: Alignment.topLeft,
                           child: Padding(
-                            padding: EdgeInsets.only(top: 40, left: 20),
+                            padding: EdgeInsets.only(top: 20, left: 20),
                             child: Text("Descripción", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.greenAccent,))
                           )
                         ),
@@ -113,8 +150,17 @@ class _ProductDetailsState extends State<ProductDetails> {
                               color: Colors.greenAccent,
                               icon: Icon(Icons.add_shopping_cart),  
                               onPressed: () async {
-                                _insertProduct(widget.producto);
-                                _query();
+                                if(int.parse(widget.producto.stock) > 0 && productQuantity <= int.parse(widget.producto.stock)) {
+                                  _insertProduct(widget.producto);
+                                  _query();
+                                  final snackBar = SnackBar(
+                                    content: Text('Artículo añadido.'),
+                                  );
+                                  // Find the Scaffold in the widget tree and use it to show a SnackBar.
+                                  Scaffold.of(context).showSnackBar(snackBar);
+                                } else {
+                                  noStockDialog("Lo sentimos, este producto no está disponible.");
+                                }
                               },
                               label: Text("Agregar al carrito"),
                               shape: RoundedRectangleBorder(
@@ -131,6 +177,28 @@ class _ProductDetailsState extends State<ProductDetails> {
           ),
         )
       )
+    );
+  }
+
+  void noStockDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+          return AlertDialog(
+            content: Container(
+                width: double.maxFinite,
+                child: Text(message)
+            ),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("OK"),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          );
+      }
     );
   }
 
@@ -192,6 +260,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                 } else {
                   productQuantity++;
                 }
+                
               });
             },
             child: Text("+", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),

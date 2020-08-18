@@ -34,6 +34,7 @@ class Producto {
   Producto.fromMapTest(Map<String, dynamic> json) {
     idLocal = json['_id'].toString();
     idProducto = json['id_producto'].toString();
+    imgUrl = json['img_url'].toString();
     nombreProducto = json['nombre_producto'];
     precio = json['precio'].toString();
     cantidad = json['cantidad'].toString();
@@ -53,6 +54,7 @@ class Producto {
 
   Map<String, dynamic> toMapTest() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['img_url'] = this.imgUrl;
     data['nombre_producto'] = this.nombreProducto;
     data['precio'] = double.parse(this.precio);
     data['cantidad'] = int.parse(this.cantidad);

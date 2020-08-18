@@ -11,6 +11,8 @@ class Categories extends StatefulWidget {
 class _CategoriesState extends State<Categories> {
   Future<List> _category;
   List content;
+  bool isConnected = false;
+  String serverUrl = "http://192.168.1.67";
   @override
   void initState() {
     super.initState();
@@ -35,7 +37,30 @@ class _CategoriesState extends State<Categories> {
             FutureBuilder(
               future: _category,
               builder: (context, snapshot) {
-                if (snapshot.hasData) {
+                /*if (snapshot.connectionState == ConnectionState.none || !snapshot.hasData) {
+                  return Center(
+                    child: Column(
+                      children: <Widget>[
+                        Image.asset("assets/images/no_internet.png",),
+                        Text("¡Oops...!, parece que hubo un problema.", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),),
+                        SizedBox(
+                          height: 20
+                        ),
+                        RaisedButton(
+                          textColor: Colors.white,
+                          color: Colors.greenAccent,
+                          child: Text('REINTENTAR'),
+                          onPressed: () {
+                            setState() {
+
+                            }
+                          },
+                        )
+                      ],
+                    )
+                  );
+                }*/ 
+               if (snapshot.hasData) {
                   content = snapshot.data;
                   return ListView.builder(
                     physics: ScrollPhysics(),
@@ -48,27 +73,18 @@ class _CategoriesState extends State<Categories> {
                       );
                     }
                   );
+                } else {
+                  return Center(child: CircularProgressIndicator());
                 }
               }
             )
-            /*
-            ListView(
-              physics: ScrollPhysics(),
-              shrinkWrap: true,
-              children: <Widget>[
-                categoriesItem(),
-                categoriesItem(),
-                categoriesItem(),
-                categoriesItem(),
-                categoriesItem(),
-              ]
-            )*/
           ],
         )
       );
   }
 
   Widget categoriesItem(Categoria categoria) {
+    print(categoria.imgURL);
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute(builder: (context) => Products(categoria: categoria.nombre)));
@@ -90,14 +106,19 @@ class _CategoriesState extends State<Categories> {
           ),
           color: Colors.greenAccent,
         ),
-        padding: EdgeInsets.only(top: 10.0, left: 20.0, right: 20.0, bottom: 5.0),
+        //padding: EdgeInsets.only(top: 10.0, left: 20.0, right: 20.0, bottom: 5.0),
         height: 100,
-        child: Align(
-          alignment: Alignment.center,
-          child: Text(
-            categoria.nombre,
-            style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500)
-          )
+        child: Stack(
+          children: <Widget>[
+            Image.network(serverUrl + categoria.imgURL, fit: BoxFit.cover, height: double.infinity, width: double.infinity,),
+            Align(
+              alignment: Alignment.center,
+              child: Text(
+                categoria.nombre,
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500, color: Colors.white)
+              )
+            ),
+          ],
         )
       )
     );

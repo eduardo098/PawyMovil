@@ -14,6 +14,7 @@ class Products extends StatefulWidget {
 class _ProductsState extends State<Products> {
   Future<List> _products;
   List content;
+  String serverUrl = "http://192.168.1.67";
   @override
   void initState() {
     super.initState();
@@ -50,7 +51,7 @@ class _ProductsState extends State<Products> {
                     alignment: Alignment.centerLeft,
                     child: Padding(
                       padding: EdgeInsets.only(left: 20),
-                      child: Text("Categoria X", style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700, color: Colors.greenAccent)),
+                      child: Text(widget.categoria, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700, color: Colors.greenAccent)),
                     )
                   ),
                 ],
@@ -59,22 +60,43 @@ class _ProductsState extends State<Products> {
             FutureBuilder(
               future: _products,
               builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  content = snapshot.data;
-                  return GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
-                    physics: ScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: content.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return featuredProductCard(context, content[index]);
-                    }
+                if (snapshot.connectionState == ConnectionState.none){
+                  //TODO: Show no internet pic.
+                  return Center(
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          child: Image.asset("assets/images/no_internet.png", fit: BoxFit.fill),
+                          height: 200
+                        )
+                      ],
+                    )
                   );
                 } else {
-                  return Align(
-                    alignment: Alignment.center,
-                    child: Text("No hay productos en esta cetegoría")
-                  );
+                  if (snapshot.hasData) {
+                    var size = MediaQuery.of(context).size;
+
+                    /*24 is for notification bar on Android*/
+                    double cardWidth = MediaQuery.of(context).size.width / 3.3;
+                    double cardHeight = MediaQuery.of(context).size.height / 9.6;
+                    content = snapshot.data;
+                    return GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: cardHeight/cardWidth
+                      ),
+                      physics: ScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: content.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return featuredProductCard(context, content[index]);
+                      }
+                    );
+                  } else {
+                    return Center(
+                      child: Text("")
+                    );
+                  }
                 }
               }
             ),
@@ -100,7 +122,7 @@ class _ProductsState extends State<Products> {
           clipBehavior: Clip.antiAliasWithSaveLayer,
           child: Column(
             children: <Widget>[
-              Image.network("https://www.tourinews.es/uploads/s1/16/86/25/paisaje-2.jpeg"),
+              Image.network(serverUrl + product.imgUrl,),
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(

@@ -5,16 +5,24 @@ import 'categories.dart';
 import 'cart.dart';
 import 'login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart' show DeviceOrientation, SystemChrome;
 import 'package:pawyapp/utils/utils.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+    SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+  ]);
+  runApp(MyApp());
+} 
 
 class MyApp extends StatelessWidget { 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Pawy',
       theme: ThemeData(
         primarySwatch: Colors.lightGreen,
       ),

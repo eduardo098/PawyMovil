@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'login.dart';
 import 'utils/utils.dart';
 import 'models/profile.dart';
+import 'localDB/db_helper.dart';
 import 'models/orderitem.dart';
 
 class Profile extends StatefulWidget {
@@ -38,7 +39,7 @@ class _ProfileState extends State<Profile> {
                     padding: EdgeInsets.only(top:80),
                     child: CircleAvatar(
                       radius: 80,
-                      backgroundImage: NetworkImage("https://images.fastcompany.net/image/upload/w_596,c_limit,q_auto:best,f_auto/wp-cms/uploads/2019/09/i-1-inside-bumble-ceo-whitney-wolfe-herds-mission-to-build-the-female-internet-FA1019BUMB002.jpg")
+                      backgroundImage: NetworkImage("https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png")
                     )
                   )
                 ),
@@ -48,7 +49,7 @@ class _ProfileState extends State<Profile> {
                 ),
                 Container(
                   padding: EdgeInsets.only(top: 20),
-                  height: 400,
+                  height: 300,
                   width: MediaQuery.of(context).size.width - 20,
                   child: Card(
                     elevation: 5,
@@ -58,7 +59,7 @@ class _ProfileState extends State<Profile> {
                           alignment: Alignment.centerLeft,
                           child: Padding(
                             padding: EdgeInsets.only(top: 20, left: 20, bottom: 10),
-                            child: Text("Mis Ordenes", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),)
+                            child: Text("Opciones", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),)
                           )
                         ),
                         //orderItem(),
@@ -72,29 +73,30 @@ class _ProfileState extends State<Profile> {
                               onPressed: () {
                                 Navigator.push(context, MaterialPageRoute(builder: (context) => Orders()));
                               },
-                              child: Text("Ver más"),
+                              child: Text("Ver mis ordenes"),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
                             ),
                           ),
                         ),
-                        Row(
-                          children: <Widget>[
-                            RaisedButton(
-                              onPressed: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
-                              },
-                              child: Text("Login")
-                            ),
-                            RaisedButton(
+                        Padding(
+                          padding: EdgeInsets.only(top: 30),
+                          child: SizedBox(
+                            height: 50,
+                            width: 220,
+                            child: RaisedButton(  
+                              color: Colors.greenAccent,
                               onPressed: () {
                                 logOut();
                               },
-                              child: Text("Cerrar sesión")
-                            ) 
-                          ],
-                        )
+                              child: Text("Cerrar sesión"),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -102,14 +104,15 @@ class _ProfileState extends State<Profile> {
               ],
             )
           );
-        } else if(snapshot.hasError){
-          return Center(child: Text("${snapshot.error}"));
+        } else {
+          return Center(child: CircularProgressIndicator());
         }
       }
     );
   }
 
   void logOut() async {
+    DatabaseHelper.db.deleteAllProducts();
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.clear();
     Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));

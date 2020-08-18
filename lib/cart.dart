@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:pawyapp/utils/utils.dart';
-import 'product_details.dart';
 import 'models/product.dart';
 import 'localDB/db_helper.dart';
-import 'dart:convert';
+import 'orders.dart';
+import 'package:flutter/scheduler.dart';
 
 class Cart extends StatefulWidget {
   @override
@@ -12,113 +12,182 @@ class Cart extends StatefulWidget {
 
 class _CartState extends State<Cart> {
   int productQuantity = 1;
+  double total = 0;
   List products;
+  bool isCartEmpty = true;
   Map<String, dynamic> orderItems;
+  Future<List> _shoppingCartItems;
+  Future<dynamic> _shoppingCartTotal;
+  String serverUrl = "http://192.168.1.67";
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _shoppingCartItems = DatabaseHelper.db.getAllProducts();
+    _shoppingCartTotal = DatabaseHelper.db.getTotal();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListView(
+        shrinkWrap: true,
         physics: ScrollPhysics(),
         children: <Widget>[
           Align(
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: EdgeInsets.only(top: 40, left: 20, bottom: 20),
-              child: Text("Mi Carrito", style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700, color: Colors.greenAccent)),
+              child: Text(isCartEmpty ? "Mi Carrito" : "", style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700, color: Colors.greenAccent)),
             )
           ),
           FutureBuilder(
-            future: DatabaseHelper.db.getAllProducts(),
+            future: _shoppingCartItems,
             builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                //List for database;
-                products = snapshot.data;
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: ScrollPhysics(),
-                  itemCount: snapshot.data.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    Producto producto = snapshot.data[index];
-                    return Dismissible(
-                      direction: DismissDirection.endToStart,
-                      key: UniqueKey(),
-                      background: Container(
-                        alignment: AlignmentDirectional.centerEnd,
-                        color: Colors.redAccent,
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(0.0, 0.0, 10.0, 0.0),
-                          child: Icon(Icons.delete_sweep, color: Colors.white, size: 30,)
-                        )
-                      ),
-                      onDismissed: (direction){
-                        DatabaseHelper.db.deleteProduct(int.parse(producto.idLocal));
-                      },
-                      child: shoppingCartItem(producto)
-                    );
-                  }
+              if(snapshot.data.length == 0 && snapshot.connectionState == ConnectionState.done) {
+                return Container(
+                  padding: EdgeInsets.only(top: 100),
+                  child: Center(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Column(
+                        children: <Widget>[
+                          Image.asset("assets/images/shopping_cart_empty.png", height: 200, width: 200,),
+                          Text("¡Vaya!, parece que tu carrito de compras \n está vacío.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),),
+                          SizedBox(
+                            height: 20
+                          ),
+                        ],
+                      )
+                    )
+                  )
                 );
+              }  
+              if (snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
+                products = snapshot.data;
+                return ListView(
+                  shrinkWrap: true,
+                  children: <Widget>[
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: ScrollPhysics(),
+                      itemCount: snapshot.data.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        Producto producto = snapshot.data[index];
+                        /*
+                        SchedulerBinding.instance.addPostFrameCallback((_) => setState(() {
+                          double totalPerProduct = double.parse(producto.precio) * double.parse(producto.cantidad);
+                          total += totalPerProduct;
+                        }));*/
+                        return Dismissible(
+                          direction: DismissDirection.endToStart,
+                          key: UniqueKey(),
+                          background: Container(
+                            alignment: AlignmentDirectional.centerEnd,
+                            color: Colors.redAccent,
+                            child: Padding(
+                              padding: EdgeInsets.fromLTRB(0.0, 0.0, 10.0, 0.0),
+                              child: Icon(Icons.delete_sweep, color: Colors.white, size: 30,)
+                            )
+                          ),
+                          onDismissed: (direction){
+                            DatabaseHelper.db.deleteProduct(int.parse(producto.idLocal));
+                            setState(() {
+                              _shoppingCartItems = DatabaseHelper.db.getAllProducts();
+                            });
+                          },
+                          child: shoppingCartItem(producto)
+                        );
+                      }
+                    ),
+                    FutureBuilder(
+                      future: _shoppingCartTotal,
+                      builder: (BuildContext context, snapshot) {
+                        return Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: <Widget>[
+                              Text("Total: ", style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700)),
+                              SizedBox(
+                                height: 50,
+                                width: 100,
+                                child: RaisedButton( 
+                                  color: Colors.greenAccent,
+                                  onPressed: () {},
+                                  child: Text("\$"+ snapshot.data.toStringAsFixed(2), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        );
+                      }
+                    ),
+                    Align(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: SizedBox(
+                          height: 50,
+                          width: 200,
+                          child: RaisedButton.icon( 
+                            color: Colors.greenAccent,
+                            onPressed: () {
+                              List items = [];
+                              for(int i = 0; i < products.length; i++) {
+                                //var producto = new Producto(cantidad: products[i].cantidad, idProducto: products[i].idProducto);
+                                //items.add(producto);
+                                var itemsMap = {
+                                  "cantidad": products[i].cantidad,
+                                  "idProducto": products[i].idProducto
+                                };
+
+                                items.add(itemsMap);
+                              }
+                              //print("JSON DATA::: " + jsonEncode(items));
+                              placeOrder(items).then((value) {
+                                final snackBar = SnackBar(
+                                  content: Text('Orden creada. ' + value.toString()),
+                                  action: SnackBarAction(
+                                    label: "VER ORDENES",
+                                    onPressed: () {
+                                      // Some code to undo the change.
+                                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => Orders()));
+                                    },
+                                  )
+                                );
+                                // Find the Scaffold in the widget tree and use it to show a SnackBar.
+                                Scaffold.of(context).showSnackBar(snackBar);
+                                DatabaseHelper.db.deleteAllProducts();
+                                setState(() {
+                                  _shoppingCartItems = DatabaseHelper.db.getAllProducts();
+                                });
+                              });
+                            },
+                            icon: Icon(Icons.check_circle),
+                            label: Text("Ordenar", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                          ),
+                        ),
+                      )
+                    )
+                  ],
+                );
+              }  else {
+                return Center(child: CircularProgressIndicator());
               }
             }
           ),
-          Padding(
-            padding: EdgeInsets.all(20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: <Widget>[
-                Text("Total: ", style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700)),
-                SizedBox(
-                  height: 50,
-                  width: 100,
-                  child: RaisedButton( 
-                    color: Colors.greenAccent,
-                    onPressed: () {},
-                    child: Text("\$99,99", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                  ),
-                ),
-              ],
-            )
-          ),
-          Align(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: SizedBox(
-                height: 50,
-                width: 200,
-                child: RaisedButton.icon( 
-                  color: Colors.greenAccent,
-                  onPressed: () {
-                    List items = [];
-                    for(int i = 0; i < products.length; i++) {
-                      //var producto = new Producto(cantidad: products[i].cantidad, idProducto: products[i].idProducto);
-                      //items.add(producto);
-                      var itemsMap = {
-                        "cantidad": products[i].cantidad,
-                        "idProducto": products[i].idProducto
-                      };
-
-                      items.add(itemsMap);
-                    }
-                    //print("JSON DATA::: " + jsonEncode(items));
-                    placeOrder(items);
-                  },
-                  icon: Icon(Icons.check_circle),
-                  label: Text("Ordenar", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-              ),
-            )
-          )
         ],
       )
     );
   }
 
   Widget shoppingCartItem(Producto producto) {
+    double totalProducto = double.parse(producto.precio) * double.parse(producto.cantidad);
     return Container(
       height: 120,
       //padding: EdgeInsets.only(top: 5, bottom: 5),
@@ -131,7 +200,7 @@ class _CartState extends State<Cart> {
               height: 120,
               width: 120,
               child: Image.network(
-               "https://www.tourinews.es/uploads/s1/16/86/25/paisaje-2.jpeg",
+               serverUrl + producto.imgUrl,
                fit: BoxFit.cover,
               )
             ),
@@ -142,14 +211,14 @@ class _CartState extends State<Cart> {
                   alignment: Alignment.topLeft,
                   child: Padding(
                     padding: EdgeInsets.only(top: 20, left: 20),
-                    child: Text(producto.nombreProducto, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700))
+                    child: Text(producto.nombreProducto, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700))
                   )
                 ),
                 Align(
                   alignment: Alignment.topLeft,
                   child: Padding(
                     padding: EdgeInsets.only(top: 10, left: 20),
-                    child: Text("\$" + producto.precio, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))
+                    child: Text("\$" + totalProducto.toStringAsFixed(2), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))
                   )
                 )
               ],
@@ -158,17 +227,18 @@ class _CartState extends State<Cart> {
             Align(
               alignment: Alignment.centerRight,
               child: Padding(
-                padding: EdgeInsets.only(left: 20),
-                child: Transform.scale(
-                  scale: 0.7,
-                  child: ProductCounter(quantity: int.parse(producto.cantidad)),
-                )
+                padding: EdgeInsets.only(right: 20),
+                child: Text("Cantidad: " + producto.cantidad, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700))
               )
             ) 
           ]
         ),
       )
     );
+  }
+  @override
+  void dispose() {
+    super.dispose();
   }
 }
 

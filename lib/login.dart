@@ -14,6 +14,8 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
 
+  static String SERVER_URL = "http://192.168.1.67";
+
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
@@ -71,10 +73,7 @@ class _LoginState extends State<Login> {
                   color: Colors.greenAccent,
                   child: Text('Iniciar Sesión'),
                   onPressed: () {
-                    login(context, emailController.text, passwordController.text).whenComplete(() => Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => MyApp()),
-                    ));
+                    login(context, emailController.text, passwordController.text);
                   },
                 )),
             Container(
@@ -103,15 +102,10 @@ class _LoginState extends State<Login> {
 
   Future<String> login(BuildContext context, String email, String password) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return http.post("http://192.168.1.75/WSPawy/ws_login.php", 
-    body: jsonEncode(<String, String> {'email': email, 'password': password}))
-    .then((http.Response response) {
-      final int statusCode = response.statusCode;
-
-      if (statusCode < 200 || statusCode > 400) {
-        throw new Exception("Error while fetching data");
-      } else {
-        //Map<String, dynamic> responseJson = json.decode(response.body);
+    try {
+      return await http.post(SERVER_URL + "/WSPawy/ws_login.php", 
+      body: jsonEncode(<String, String> {'email': email, 'password': password}))
+      .then((http.Response response) {
         print(jsonDecode(response.body));
         Map<String, dynamic> responseJson = json.decode(response.body);
         int loginStatus = responseJson["success"];
@@ -120,11 +114,17 @@ class _LoginState extends State<Login> {
           print("Logeado!");
           loginDialog(context, "Has iniciado sesión con exito!");
           prefs.setString("token", responseJson["token"]);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MyApp()),);
         } else {
           loginDialog(context, "Credenciales incorrectas.");
         }
-      }
-    });
+      });
+    } catch(e) {
+      print(e);
+      return null;
+    }
   }
 
   void loginDialog(BuildContext context, String message) {
